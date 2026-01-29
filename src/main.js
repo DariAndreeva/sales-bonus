@@ -53,7 +53,7 @@ function analyzeSalesData(data, options) {
   }
 
   const { calculateSimpleRevenue, calculateBonusByProfit } = options;
-  // console.log(options);
+  console.log(options);
 
   if (!calculateBonusByProfit) {
     throw new Error("Отсутствует обязательная функция: calculateBonusByProfit");
