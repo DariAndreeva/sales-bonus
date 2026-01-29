@@ -5,9 +5,9 @@
  * @returns {number}
  */
 function calculateSimpleRevenue(purchase, _product) {
-  //   _product - на будущее
+  //   _product - параметр зарезервирован для будущего использования
   const { discount, sale_price, quantity } = purchase;
-  const discountCoeff = 1 - discount / 100; // 0 ... 1
+  const discountCoeff = 1 - discount / 100; 
 
   return sale_price * quantity * discountCoeff;
 }
@@ -53,7 +53,7 @@ function analyzeSalesData(data, options) {
   }
 
   const { calculateSimpleRevenue, calculateBonusByProfit } = options;
-  console.log(options);
+  
 
   if (!calculateBonusByProfit) {
     throw new Error("Отсутствует обязательная функция: calculateBonusByProfit");
@@ -97,7 +97,7 @@ function analyzeSalesData(data, options) {
     if (!seller) return;
 
     seller.sales_count += 1;
-    seller.revenue += record.total_amount;
+    
 
     record.items.forEach((item) => {
       const product = productIndex[item.sku];
@@ -107,6 +107,7 @@ function analyzeSalesData(data, options) {
       const revenue = calculateSimpleRevenue(item, product);
       const profit = revenue - cost;
 
+      seller.revenue += revenue;
       seller.profit += profit;
 
       if (!seller.products_sold[item.sku]) {
