@@ -40,18 +40,24 @@ function calculateBonusByProfit(index, total, seller) {
  */
 
 function analyzeSalesData(data, options) {
-  // @TODO: Проверка входных данных
-  if (!data || !Array.isArray(data.sellers) || data.sellers.length === 0) {
+  // Проверка основных данных
+  if (
+    !data ||
+    !Array.isArray(data.sellers) ||
+    data.sellers.length === 0 ||
+    !Array.isArray(data.purchase_records) ||
+    data.purchase_records.length === 0
+  ) {
     throw new Error("Некорректные входные данные");
   }
-  if (!data.products) {
-    throw new Error("Отсутствует обязательный параметр: products");
+
+  // Проверка наличия и валидности продуктов
+  if (!data.products || !Array.isArray(data.products)) {
+    throw new Error("Отсутствует обязательный массив: products");
   }
-  if (!Array.isArray(data.products)) {
-    throw new Error("Параметр products должен быть массивом");
-  }
+
   if (data.products.length === 0) {
-    throw new Error("Массив products не может быть пустым");
+    throw new Error("Массив продуктов не может быть пустым");
   }
 
   // @TODO: Проверка наличия опций
@@ -60,15 +66,14 @@ function analyzeSalesData(data, options) {
     throw new Error("Отсутствует обязательный объект: options");
   }
 
-  const calculateRevenue = options.calculateRevenue || calculateSimpleRevenue;
-  const calculateBonus = options.calculateBonus || calculateBonusByProfit;
+  const { calculateRevenue, calculateBonus } = options;
 
-  if (!calculateBonusByProfit) {
-    throw new Error("Отсутствует обязательная функция: calculateBonusByProfit");
+  if (!calculateBonus) {
+    throw new Error("Отсутствует обязательная функция: calculateBonus");
   }
 
-  if (!calculateSimpleRevenue) {
-    throw new Error("Отсутствует обязательная функция: calculateSimpleRevenue");
+  if (!calculateRevenue) {
+    throw new Error("Отсутствует обязательная функция: calculateRevenue");
   }
 
   if (typeof calculateBonus !== "function") {
@@ -133,18 +138,16 @@ function analyzeSalesData(data, options) {
   const total = sellerStats.length;
   sellerStats.forEach((seller, index) => {
     seller.bonus = calculateBonusByProfit(index, total, seller);
-    seller.top_products = 0; // пока заглушка
+    seller.top_products = []; // пока заглушка
   });
 
-  // @TODO: Подготовка итоговой коллекции с нужными полями
+  // Подготовка итоговой коллекции с нужными полями
   return sellerStats.map((seller) => {
+    // Формируем топ-10 товаров по количеству продаж (исправлен формат)
     const topProducts = Object.entries(seller.products_sold)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
-      .map(([sku, quantity]) => ({
-        sku: sku,
-        quantity: quantity,
-      }));
+      .map(([sku, quantity]) => ({ sku, quantity }));
 
     return {
       seller_id: seller.id,
