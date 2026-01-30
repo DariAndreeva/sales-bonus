@@ -115,12 +115,11 @@ function analyzeSalesData(data, options) {
 
     record.items.forEach((item) => {
       const product = productIndex[item.sku];
-      // Пропускаем, если товар не найден или нет закупочной цены
+
       if (!product || typeof product.purchase_price !== "number") {
         return;
       }
 
-      // Убедимся, что sale_price и quantity — числа
       if (
         typeof item.sale_price !== "number" ||
         typeof item.quantity !== "number"
@@ -129,7 +128,7 @@ function analyzeSalesData(data, options) {
       }
 
       const cost = product.purchase_price * item.quantity;
-      const revenue = calculateSimpleRevenue(item, product);
+      const revenue = calculateRevenue(item, product);
       const profit = revenue - cost;
 
       // Защита от NaN
@@ -153,8 +152,8 @@ function analyzeSalesData(data, options) {
   // @TODO: Назначение премий на основе ранжирования
   const total = sellerStats.length;
   sellerStats.forEach((seller, index) => {
-    seller.bonus = calculateBonusByProfit(index, total, seller);
-    seller.top_products = []; // пока заглушка
+    seller.bonus = calculateBonus(index, total, seller);
+    seller.top_products = [];
   });
 
   // Подготовка итоговой коллекции с нужными полями
