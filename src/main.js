@@ -53,11 +53,11 @@ function analyzeSalesData(data, options) {
 
   const { calculateRevenue, calculateBonus } = options;
 
-  if (!calculateBonus) {
+  if (!calculateBonusByProfit) {
     throw new Error("Отсутствует обязательная функция: calculateBonusByProfit");
   }
 
-  if (!calculateRevenue) {
+  if (!calculateSimpleRevenue) {
     throw new Error("Отсутствует обязательная функция: calculateSimpleRevenue");
   }
 
