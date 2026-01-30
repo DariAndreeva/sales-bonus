@@ -7,7 +7,7 @@
 function calculateSimpleRevenue(purchase, _product) {
   //   _product - параметр зарезервирован для будущего использования
   const { discount, sale_price, quantity } = purchase;
-  const discountCoeff = 1 - discount / 100;
+  let discountCoeff = 1 - discount / 100;
 
   return sale_price * quantity * discountCoeff;
 }
@@ -40,24 +40,13 @@ function calculateBonusByProfit(index, total, seller) {
  */
 
 function analyzeSalesData(data, options) {
-  // Проверка основных данных
   if (
     !data ||
     !Array.isArray(data.sellers) ||
     data.sellers.length === 0 ||
-    !Array.isArray(data.purchase_records) ||
     data.purchase_records.length === 0
   ) {
     throw new Error("Некорректные входные данные");
-  }
-
-  // Проверка наличия и валидности продуктов
-  if (!data.products || !Array.isArray(data.products)) {
-    throw new Error("Отсутствует обязательный массив: products");
-  }
-
-  if (data.products.length === 0) {
-    throw new Error("Массив продуктов не может быть пустым");
   }
 
   // @TODO: Проверка наличия опций
@@ -68,12 +57,12 @@ function analyzeSalesData(data, options) {
 
   const { calculateRevenue, calculateBonus } = options;
 
-  if (!calculateBonus) {
-    throw new Error("Отсутствует обязательная функция: calculateBonus");
+  if (!calculateRevenue || !calculateBonus) {
+    throw new Error("Чего-то не хватает");
   }
 
-  if (!calculateRevenue) {
-    throw new Error("Отсутствует обязательная функция: calculateRevenue");
+  if (!typeof options === "object") {
+    throw new Error("Некорректные входные данные");
   }
 
   if (typeof calculateBonus !== "function") {
@@ -93,8 +82,6 @@ function analyzeSalesData(data, options) {
     profit: 0,
     sales_count: 0,
     products_sold: {},
-    bonus: 0,
-    top_products: [],
   }));
 
   // @TODO: Индексация продавцов и товаров для быстрого доступа
@@ -103,41 +90,22 @@ function analyzeSalesData(data, options) {
   );
 
   const productIndex = Object.fromEntries(
-    (data.products || []).map((product) => [product.sku, product]),
+    data.products.map((product) => [product.sku, product]),
   );
 
   // @TODO: Расчет выручки и прибыли для каждого продавца
   data.purchase_records.forEach((record) => {
     const seller = sellerIndex[record.seller_id];
-    if (!seller) return;
-
     seller.sales_count += 1;
+    seller.revenue += record.total_amount - record.total_discount;
 
     record.items.forEach((item) => {
       const product = productIndex[item.sku];
-
-      if (!product || typeof product.purchase_price !== "number") {
-        return;
-      }
-
-      if (
-        typeof item.sale_price !== "number" ||
-        typeof item.quantity !== "number"
-      ) {
-        return;
-      }
-
-      const cost = product.purchase_price * item.quantity;
+      let cost = product.purchase_price * item.quantity;
       const revenue = calculateRevenue(item, product);
+      item.revenue = calculateSimpleRevenue(item, product);
       const profit = revenue - cost;
-
-      // Защита от NaN
-      if (isNaN(revenue) || isNaN(profit)) {
-        return;
-      }
-
-      seller.revenue += revenue;
-      seller.profit += profit;
+      seller.profit += item.revenue - cost;
 
       if (!seller.products_sold[item.sku]) {
         seller.products_sold[item.sku] = 0;
