@@ -44,6 +44,15 @@ function analyzeSalesData(data, options) {
   if (!data || !Array.isArray(data.sellers) || data.sellers.length === 0) {
     throw new Error("Некорректные входные данные");
   }
+  if (!data.products) {
+    throw new Error("Отсутствует обязательный параметр: products");
+  }
+  if (!Array.isArray(data.products)) {
+    throw new Error("Параметр products должен быть массивом");
+  }
+  if (data.products.length === 0) {
+    throw new Error("Массив products не может быть пустым");
+  }
 
   // @TODO: Проверка наличия опций
 
@@ -51,7 +60,8 @@ function analyzeSalesData(data, options) {
     throw new Error("Отсутствует обязательный объект: options");
   }
 
-  const { calculateRevenue, calculateBonus } = options;
+  const calculateRevenue = options.calculateRevenue || calculateSimpleRevenue;
+  const calculateBonus = options.calculateBonus || calculateBonusByProfit;
 
   if (!calculateBonusByProfit) {
     throw new Error("Отсутствует обязательная функция: calculateBonusByProfit");
@@ -128,11 +138,13 @@ function analyzeSalesData(data, options) {
 
   // @TODO: Подготовка итоговой коллекции с нужными полями
   return sellerStats.map((seller) => {
-    // Формируем топ-10 товаров по количеству продаж
     const topProducts = Object.entries(seller.products_sold)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
-      .map(([sku]) => sku);
+      .map(([sku, quantity]) => ({
+        sku: sku,
+        quantity: quantity,
+      }));
 
     return {
       seller_id: seller.id,
