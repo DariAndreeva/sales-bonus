@@ -7,7 +7,7 @@
 function calculateSimpleRevenue(purchase, _product) {
   //   _product - параметр зарезервирован для будущего использования
   const { discount, sale_price, quantity } = purchase;
-  const discountCoeff = 1 - discount / 100; 
+  const discountCoeff = 1 - discount / 100;
 
   return sale_price * quantity * discountCoeff;
 }
@@ -47,28 +47,26 @@ function analyzeSalesData(data, options) {
 
   // @TODO: Проверка наличия опций
 
-
   if (!options || typeof options !== "object" || Array.isArray(options)) {
     throw new Error("Отсутствует обязательный объект: options");
   }
 
-  const { calculateSimpleRevenue, calculateBonusByProfit } = options;
-  
+  const { calculateRevenue, calculateBonus } = options;
 
-  if (!calculateBonusByProfit) {
+  if (!calculateBonus) {
     throw new Error("Отсутствует обязательная функция: calculateBonusByProfit");
   }
 
-  if (!calculateSimpleRevenue) {
+  if (!calculateRevenue) {
     throw new Error("Отсутствует обязательная функция: calculateSimpleRevenue");
   }
 
-  if (typeof calculateBonusByProfit !== "function") {
-    throw new Error("calculateBonusByProfit должна быть функцией");
+  if (typeof calculateBonus !== "function") {
+    throw new Error("calculateBonus должна быть функцией");
   }
 
-  if (typeof calculateSimpleRevenue !== "function") {
-    throw new Error("calculateSimpleRevenue  должна быть функцией");
+  if (typeof calculateRevenue !== "function") {
+    throw new Error("calculateRevenue должна быть функцией");
   }
 
   // @TODO: Подготовка промежуточных данных для сбора статистики
@@ -80,6 +78,8 @@ function analyzeSalesData(data, options) {
     profit: 0,
     sales_count: 0,
     products_sold: {},
+    bonus: 0,
+    top_products: [],
   }));
 
   // @TODO: Индексация продавцов и товаров для быстрого доступа
@@ -97,7 +97,6 @@ function analyzeSalesData(data, options) {
     if (!seller) return;
 
     seller.sales_count += 1;
-    
 
     record.items.forEach((item) => {
       const product = productIndex[item.sku];
@@ -146,5 +145,3 @@ function analyzeSalesData(data, options) {
     };
   });
 }
-
-
