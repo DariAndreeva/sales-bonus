@@ -115,11 +115,27 @@ function analyzeSalesData(data, options) {
 
     record.items.forEach((item) => {
       const product = productIndex[item.sku];
-      if (!product) return;
+      // Пропускаем, если товар не найден или нет закупочной цены
+      if (!product || typeof product.purchase_price !== "number") {
+        return;
+      }
+
+      // Убедимся, что sale_price и quantity — числа
+      if (
+        typeof item.sale_price !== "number" ||
+        typeof item.quantity !== "number"
+      ) {
+        return;
+      }
 
       const cost = product.purchase_price * item.quantity;
       const revenue = calculateSimpleRevenue(item, product);
       const profit = revenue - cost;
+
+      // Защита от NaN
+      if (isNaN(revenue) || isNaN(profit)) {
+        return;
+      }
 
       seller.revenue += revenue;
       seller.profit += profit;
